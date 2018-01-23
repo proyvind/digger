@@ -10,6 +10,7 @@
 #include "digger.h"
 #ifdef _SDL
 #include "sdl_kbd.h" 
+#include "sdl_js.h"
 #elif defined(_VGL)
 #include "fbsd_kbd.h"
 #endif
@@ -128,6 +129,8 @@ void readjoy(void)
 
 void detectjoy(void)
 {
+  init_joystick();
+
   joyflag=false;
   staticdir=dynamicdir=DIR_NONE;
 }

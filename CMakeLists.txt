@@ -69,6 +69,7 @@ SET( DIGGER_SOURCE
      sdl_vid.c
      sdl_timer.c
      sdl_snd.c
+     sdl_js.c
      digger_math.c
      monster_obj.c
      digger_obj.c

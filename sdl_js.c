@@ -27,7 +27,7 @@ static void print_joystick_info(int joy_idx, SDL_Joystick* joy, SDL_GameControll
 }
 
 
-static SDL_Joystick *joy[2];
+static SDL_Joystick *joy[2] = {NULL,NULL};
 
 bool init_joystick(void) {
   if(SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) < 0)

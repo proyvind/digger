@@ -26,40 +26,40 @@ static void print_joystick_info(int joy_idx, SDL_Joystick* joy, SDL_GameControll
   printf("\n");
 }
 
+
+static SDL_Joystick *joy[2];
+
 bool init_joystick(void) {
-  if(SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) < 0) {
+  if(SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) < 0)
     fprintf(stderr, "Unable to init joystick: %s\n", SDL_GetError());
-  } else {
+  else {
     int num_joysticks = SDL_NumJoysticks();
     if (num_joysticks == 0)
-    {
       printf("No joysticks were found\n");
-    }
     else
     {
       printf("Found %d joystick(s)\n\n", num_joysticks);
-      for(int joy_idx = 0; joy_idx < num_joysticks; ++joy_idx)
-      {
-	SDL_Joystick* joy = SDL_JoystickOpen(joy_idx);
-	if (!joy)
-	{
-	  fprintf(stderr, "Unable to open joystick %d\n", joy_idx);
-	}
-	else
-	{
-	  SDL_GameController* gamepad = SDL_GameControllerOpen(joy_idx);
-	  print_joystick_info(joy_idx, joy, gamepad);
-	  if (gamepad)
-	  {
-	    SDL_GameControllerClose(gamepad);
-	  }
-	  SDL_JoystickClose(joy);
-	}
+      if (num_joysticks > sizeof(joy)/sizeof(*joy))
+	num_joysticks = sizeof(joy)/sizeof(*joy);
+      for(int joy_idx = 0; joy_idx < num_joysticks; ++joy_idx) {
+	if (joy[joy_idx])
+	  SDL_JoystickClose(joy[joy_idx]);
+	joy[joy_idx] = SDL_JoystickOpen(joy_idx);
+
+	if (!joy[joy_idx])
+	  fprintf(stderr, "Unable to open joystick %d\n", 0);
       }
-      return true;
     }
   }
+  if (joy[0])
+    return true;
   return false;
 }
 
+uint8_t GetJSHat(int joy_idx, int hat) {
+  return SDL_JoystickGetHat(joy[joy_idx], hat);
+}
 
+uint8_t GetJSButton(int joy_idx, int button) {
+  return SDL_JoystickGetButton(joy[joy_idx], button);
+}

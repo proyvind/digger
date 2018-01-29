@@ -163,11 +163,14 @@ void readdirect(int n)
   bool u2=false,d2=false,l2=false,r2=false;
 
   if (n==0) {
-    if (auppressed || uppressed) { u=true; auppressed=false; }
-    if (adownpressed || downpressed) { d=true; adownpressed=false; }
-    if (aleftpressed || leftpressed) { l=true; aleftpressed=false; }
-    if (arightpressed || rightpressed) { r=true; arightpressed=false; }
-    if (f1pressed || af1pressed) {
+    uint8_t hat = GetJSHat(0,0);
+
+    if (auppressed || hat & SDL_HAT_UP || uppressed) { u=true; auppressed=false; }
+    if (adownpressed || hat & SDL_HAT_DOWN || downpressed) { d=true; adownpressed=false; }
+    if (aleftpressed || hat & SDL_HAT_LEFT || leftpressed) { l=true; aleftpressed=false; }
+    if (arightpressed || hat & SDL_HAT_RIGHT || rightpressed) { r=true; arightpressed=false; }
+
+    if (f1pressed || GetJSButton(0,0) || af1pressed) {
       firepflag=true;
       af1pressed=false;
     }

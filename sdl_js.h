@@ -7,4 +7,8 @@
 
 bool init_joystick(void);
 
+uint8_t GetJSHat(int joy_idx, int hat);
+
+uint8_t GetJSButton(int joy_idx, int button);
+
 #endif

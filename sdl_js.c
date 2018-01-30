@@ -51,9 +51,8 @@ bool init_joystick(void) {
       }
     }
   }
-  if (joy[0])
-    return true;
-  return false;
+  return true;
+  return (joy[0] != NULL);
 }
 
 uint8_t GetJSHat(int joy_idx, int hat) {

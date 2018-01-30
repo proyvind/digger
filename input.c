@@ -31,8 +31,8 @@ static int16_t dynamicdir=-1,dynamicdir2=-1,staticdir=-1,staticdir2=-1,joyx=0,jo
 
 static bool joybut1=false;
 
-static int16_t keydir=0,keydir2=0,jleftthresh=0,jupthresh=0,jrightthresh=0,
-      jdownthresh=0,joyanax=0,joyanay=0;
+static int16_t keydir=0,keydir2=0,jleftthresh=-165,jupthresh=-165,jrightthresh=165,
+      jdownthresh=165,joyanax=0,joyanay=0;
 
 static bool joyflag=false;
 
@@ -125,13 +125,25 @@ void checkkeyb(void)
    DOSPC. */
 void readjoy(void)
 {
+  uint8_t hat = GetJSHat(0,0);
+  if (hat & SDL_HAT_UP)
+    joyy = -32768>>6;
+  if (hat & SDL_HAT_DOWN)
+    joyy = 32768>>6;
+  if (hat & SDL_HAT_LEFT)
+    joyx = -32768>>6;
+  if (hat & SDL_HAT_RIGHT)
+    joyx = 32768>>6;
+  if (hat == SDL_HAT_CENTERED)
+    joyx = joyanay = 0;
+
+  joybut1 = GetJSButton(0,0);
 }
 
 void detectjoy(void)
 {
-  init_joystick();
+  joyflag = init_joystick();
 
-  joyflag=false;
   staticdir=dynamicdir=DIR_NONE;
 }
 
@@ -163,14 +175,11 @@ void readdirect(int n)
   bool u2=false,d2=false,l2=false,r2=false;
 
   if (n==0) {
-    uint8_t hat = GetJSHat(0,0);
-
-    if (auppressed || hat & SDL_HAT_UP || uppressed) { u=true; auppressed=false; }
-    if (adownpressed || hat & SDL_HAT_DOWN || downpressed) { d=true; adownpressed=false; }
-    if (aleftpressed || hat & SDL_HAT_LEFT || leftpressed) { l=true; aleftpressed=false; }
-    if (arightpressed || hat & SDL_HAT_RIGHT || rightpressed) { r=true; arightpressed=false; }
-
-    if (f1pressed || GetJSButton(0,0) || af1pressed) {
+    if (auppressed || uppressed) { u=true; auppressed=false; }
+    if (adownpressed || downpressed) { d=true; adownpressed=false; }
+    if (aleftpressed || leftpressed) { l=true; aleftpressed=false; }
+    if (arightpressed || rightpressed) { r=true; arightpressed=false; }
+    if (f1pressed || af1pressed) {
       firepflag=true;
       af1pressed=false;
     }
@@ -275,10 +284,11 @@ bool teststart(void)
   if (start) {
     start=false;
     startf=true;
-    joyflag=false;
+    //joyflag=false;
   }
   if (!startf)
     return false;
+#if 0
   if (joyflag) {
     joyanay=0;
     joyanax=0;
@@ -308,6 +318,7 @@ bool teststart(void)
     joyanax=joyx;
     joyanay=joyy;
   }
+#endif
   return true;
 }
 
@@ -316,10 +327,12 @@ bool teststart(void)
 int16_t getdirect(int n)
 {
   int16_t dir=((n==0) ? keydir : keydir2);
+#if 1
   if (joyflag) {
     dir=DIR_NONE;
-    if (joyx<jleftthresh)
+    if (joyx<jleftthresh) {
       dir=DIR_LEFT;
+    }
     if (joyx>jrightthresh)
       dir=DIR_RIGHT;
     if (joyx>=jleftthresh && joyx<=jrightthresh) {
@@ -329,6 +342,7 @@ int16_t getdirect(int n)
         dir=DIR_DOWN;
     }
   }
+#endif
   if (n==0) {
     if (playing)
       playgetdir(&dir,&firepflag);

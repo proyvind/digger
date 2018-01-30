@@ -143,7 +143,6 @@ void readjoy(void)
   else
     joyx = joyy = 0;
 
-  printf("joyx: %d, joyy: %d\n", joyx, joyy);
   joybut1 = GetJSButton(0,0);
 }
 

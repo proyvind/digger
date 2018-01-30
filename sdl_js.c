@@ -54,6 +54,10 @@ bool init_joystick(void) {
   return (joy[0] != NULL);
 }
 
+int16_t GetJSAxis(int joy_idx, int axis) {
+  return SDL_JoystickGetAxis(joy[joy_idx], axis);
+}
+
 uint8_t GetJSHat(int joy_idx, int hat) {
   return SDL_JoystickGetHat(joy[joy_idx], hat);
 }

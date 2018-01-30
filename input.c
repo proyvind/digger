@@ -31,8 +31,8 @@ static int16_t dynamicdir=-1,dynamicdir2=-1,staticdir=-1,staticdir2=-1,joyx=0,jo
 
 static bool joybut1=false;
 
-static int16_t keydir=0,keydir2=0,jleftthresh=-165,jupthresh=-165,jrightthresh=165,
-      jdownthresh=165,joyanax=0,joyanay=0;
+static int16_t keydir=0,keydir2=0,jleftthresh=0,jupthresh=0,jrightthresh=0,
+      jdownthresh=0,joyanax=0,joyanay=0;
 
 static bool joyflag=false;
 
@@ -125,18 +125,25 @@ void checkkeyb(void)
    DOSPC. */
 void readjoy(void)
 {
-  uint8_t hat = GetJSHat(0,0);
-  if (hat & SDL_HAT_UP)
-    joyy = -32768>>6;
-  if (hat & SDL_HAT_DOWN)
-    joyy = 32768>>6;
-  if (hat & SDL_HAT_LEFT)
-    joyx = -32768>>6;
-  if (hat & SDL_HAT_RIGHT)
-    joyx = 32768>>6;
-  if (hat == SDL_HAT_CENTERED)
-    joyx = joyanay = 0;
+  int16_t axisy, axisx;
+  uint8_t hat;
 
+  if ((hat = GetJSHat(0,0)) != SDL_HAT_CENTERED) {
+    if (hat & SDL_HAT_LEFT)
+      joyx = -32768/655;
+    if (hat & SDL_HAT_RIGHT)
+      joyx = 32768/655;
+    if (hat & SDL_HAT_UP)
+      joyy = -32768/655;
+    if (hat & SDL_HAT_DOWN)
+      joyy = 32768/655;
+  }
+  else if((axisx = GetJSAxis(0,0)) || (axisy = GetJSAxis(0,1)))
+    joyx = axisx/655, joyy = axisy/655;
+  else
+    joyx = joyy = 0;
+
+  printf("joyx: %d, joyy: %d\n", joyx, joyy);
   joybut1 = GetJSButton(0,0);
 }
 
@@ -288,7 +295,6 @@ bool teststart(void)
   }
   if (!startf)
     return false;
-#if 0
   if (joyflag) {
     joyanay=0;
     joyanax=0;
@@ -315,10 +321,12 @@ bool teststart(void)
     if (jdownthresh>255)
       jdownthresh=255;
     jdownthresh-=10;
+    /* hmm */
+    jupthresh-=jupthresh*2;
+    jleftthresh-=jleftthresh*2;
     joyanax=joyx;
     joyanay=joyy;
   }
-#endif
   return true;
 }
 
@@ -327,22 +335,19 @@ bool teststart(void)
 int16_t getdirect(int n)
 {
   int16_t dir=((n==0) ? keydir : keydir2);
-#if 1
   if (joyflag) {
     dir=DIR_NONE;
-    if (joyx<jleftthresh) {
+    if (joyx<jleftthresh)
       dir=DIR_LEFT;
-    }
-    if (joyx>jrightthresh)
+    else if (joyx>jrightthresh)
       dir=DIR_RIGHT;
     if (joyx>=jleftthresh && joyx<=jrightthresh) {
       if (joyy<jupthresh)
         dir=DIR_UP;
-      if (joyy>jdownthresh)
+      else if (joyy>jdownthresh)
         dir=DIR_DOWN;
     }
   }
-#endif
   if (n==0) {
     if (playing)
       playgetdir(&dir,&firepflag);

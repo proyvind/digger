@@ -51,7 +51,6 @@ bool init_joystick(void) {
       }
     }
   }
-  return true;
   return (joy[0] != NULL);
 }
 

@@ -13,4 +13,6 @@ uint8_t GetJSHat(int joy_idx, int hat);
 
 uint8_t GetJSButton(int joy_idx, int button);
 
+void HapticRumble(int joy_idx, float strength, uint32_t length);
+
 #endif

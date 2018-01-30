@@ -28,6 +28,7 @@ static void print_joystick_info(int joy_idx, SDL_Joystick* joy, SDL_GameControll
 
 
 static SDL_Joystick *joy[2] = {NULL,NULL};
+static SDL_Haptic *haptic[2] = {NULL,NULL};
 
 bool init_joystick(void) {
   if(SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) < 0)
@@ -48,6 +49,16 @@ bool init_joystick(void) {
 
 	if (!joy[joy_idx])
 	  fprintf(stderr, "Unable to open joystick %d\n", 0);
+	else {
+	  if (haptic[joy_idx])
+	    SDL_HapticClose(haptic[joy_idx]);
+	  haptic[joy_idx] = SDL_HapticOpenFromJoystick(joy[joy_idx]);
+	  if (!SDL_HapticRumbleSupported(haptic[joy_idx]) &&
+		SDL_HapticRumbleInit(haptic[joy_idx]) !=0) {
+	    SDL_HapticClose(haptic[joy_idx]);
+	    haptic[joy_idx] = NULL;
+	  }
+	}
       }
     }
   }
@@ -64,4 +75,9 @@ uint8_t GetJSHat(int joy_idx, int hat) {
 
 uint8_t GetJSButton(int joy_idx, int button) {
   return SDL_JoystickGetButton(joy[joy_idx], button);
+}
+
+void HapticRumble(int joy_idx, float strength, uint32_t length) {
+  if (haptic[joy_idx])
+    SDL_HapticRumblePlay(haptic[joy_idx], strength, length);
 }

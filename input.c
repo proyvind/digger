@@ -100,6 +100,10 @@ void checkkeyb(void)
     if (!mode_change)
       start=true;                                /* Change number of players */
   }
+  if (joyflag) {
+    if (GetJSButton(0,2) && GetJSButton(0,3))
+      escape=true;
+  }
 }
 
 /* Joystick not yet implemented. It will be, though, using gethrt on platform

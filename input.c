@@ -27,16 +27,11 @@ static bool aleft2pressed=false,aright2pressed=false,
 
 int16_t akeypressed;
 
-static int16_t dynamicdir=-1,dynamicdir2=-1,staticdir=-1,staticdir2=-1,joyx=0,joyy=0;
+static int16_t dynamicdir=-1,dynamicdir2=-1,staticdir=-1,staticdir2=-1;
 
-static bool joybut1=false;
-
-static int16_t keydir=0,keydir2=0,jleftthresh=0,jupthresh=0,jrightthresh=0,
-      jdownthresh=0,joyanax=0,joyanay=0;
+static int16_t keydir=0,keydir2=0;
 
 static bool joyflag=false;
-
-void readjoy(void);
 
 /* The standard ASCII keyboard is also checked so that very short keypresses
    are not overlooked. The functions kbhit() (returns bool denoting whether or
@@ -123,27 +118,27 @@ void checkkeyb(void)
 
 /* Joystick not yet implemented. It will be, though, using gethrt on platform
    DOSPC. */
-void readjoy(void)
+static uint8_t readjoy(int n)
 {
-  int16_t axisy, axisx;
   uint8_t hat;
 
-  if ((hat = GetJSHat(0,0)) != SDL_HAT_CENTERED) {
-    if (hat & SDL_HAT_LEFT)
-      joyx = -32768/655;
-    if (hat & SDL_HAT_RIGHT)
-      joyx = 32768/655;
-    if (hat & SDL_HAT_UP)
-      joyy = -32768/655;
-    if (hat & SDL_HAT_DOWN)
-      joyy = 32768/655;
-  }
-  else if((axisx = GetJSAxis(0,0)) || (axisy = GetJSAxis(0,1)))
-    joyx = axisx/655, joyy = axisy/655;
-  else
-    joyx = joyy = 0;
+  if ((hat = GetJSHat(n,0)) == SDL_HAT_CENTERED) {
+    int16_t axisx = GetJSAxis(n,0), axisy = GetJSAxis(n,1);
+    if (axisx || axisy) {
+      const uint16_t threshold = 16384;
 
-  joybut1 = GetJSButton(0,0);
+      if (axisx < 0 && abs(axisx) > threshold) 
+	hat|=SDL_HAT_LEFT;
+      else if (axisx > threshold)
+	hat|=SDL_HAT_RIGHT;
+      if (axisy < 0 && abs(axisy) > threshold)
+	hat|=SDL_HAT_UP;
+      else if (axisy > threshold)
+	hat|=SDL_HAT_DOWN;
+    }
+  }
+
+  return hat;
 }
 
 void detectjoy(void)
@@ -176,16 +171,16 @@ bool ou2pressed=false,od2pressed=false,ol2pressed=false,or2pressed=false;
 
 void readdirect(int n)
 {
-  int16_t j;
   bool u=false,d=false,l=false,r=false;
   bool u2=false,d2=false,l2=false,r2=false;
+  uint8_t hat = readjoy(n);
 
   if (n==0) {
-    if (auppressed || uppressed) { u=true; auppressed=false; }
-    if (adownpressed || downpressed) { d=true; adownpressed=false; }
-    if (aleftpressed || leftpressed) { l=true; aleftpressed=false; }
-    if (arightpressed || rightpressed) { r=true; arightpressed=false; }
-    if (f1pressed || af1pressed) {
+    if ((hat & SDL_HAT_UP) || auppressed || uppressed) { u=true; auppressed=false; }
+    if ((hat & SDL_HAT_DOWN) || adownpressed || downpressed) { d=true; adownpressed=false; }
+    if ((hat & SDL_HAT_LEFT) || aleftpressed || leftpressed) { l=true; aleftpressed=false; }
+    if ((hat & SDL_HAT_RIGHT) || arightpressed || rightpressed) { r=true; arightpressed=false; }
+    if (GetJSButton(0,0) || f1pressed || af1pressed) {
       firepflag=true;
       af1pressed=false;
     }
@@ -260,93 +255,29 @@ void readdirect(int n)
   if (joyflag) {
     incpenalty();
     incpenalty();
-    joyanay=0;
-    joyanax=0;
-    for (j=0;j<4;j++) {
-      readjoy();
-      joyanax+=joyx;
-      joyanay+=joyy;
-    }
-    joyx=joyanax>>2;
-    joyy=joyanay>>2;
-    if (joybut1)
-      firepflag=true;
-    else
-      firepflag=false;
   }
 }
 
-/* Calibrate joystick while waiting at title screen. This works more
-   effectively if the user waggles the joystick in the title screen. */
 bool teststart(void)
 {
-  int16_t j;
   bool startf=false;
   if (joyflag) {
-    readjoy();
-    if (joybut1)
+    if (GetJSButton(0,0))
       startf=true;
   }
   if (start) {
     start=false;
     startf=true;
-    //joyflag=false;
   }
   if (!startf)
     return false;
-  if (joyflag) {
-    joyanay=0;
-    joyanax=0;
-    for (j=0;j<50;j++) {
-      readjoy();
-      joyanax+=joyx;
-      joyanay+=joyy;
-    }
-    joyx=joyanax/50;
-    joyy=joyanay/50;
-    jleftthresh=joyx-35;
-    if (jleftthresh<0)
-      jleftthresh=0;
-    jleftthresh+=10;
-    jupthresh=joyy-35;
-    if (jupthresh<0)
-      jupthresh=0;
-    jupthresh+=10;
-    jrightthresh=joyx+35;
-    if (jrightthresh>255)
-      jrightthresh=255;
-    jrightthresh-=10;
-    jdownthresh=joyy+35;
-    if (jdownthresh>255)
-      jdownthresh=255;
-    jdownthresh-=10;
-    /* hmm */
-    jupthresh-=jupthresh*2;
-    jleftthresh-=jleftthresh*2;
-    joyanax=joyx;
-    joyanay=joyy;
-  }
+
   return true;
 }
 
-/* Why the joystick reading is split between readdirect and getdir like this is a
-   mystery to me. */
 int16_t getdirect(int n)
 {
   int16_t dir=((n==0) ? keydir : keydir2);
-  if (joyflag) {
-    dir=DIR_NONE;
-    if (joyx<jleftthresh)
-      dir=DIR_LEFT;
-    else if (joyx>jrightthresh)
-      dir=DIR_RIGHT;
-    if (joyx>=jleftthresh && joyx<=jrightthresh) {
-      if (joyy<jupthresh)
-        dir=DIR_UP;
-      else if (joyy>jdownthresh)
-        dir=DIR_DOWN;
-    }
-  }
   if (n==0) {
     if (playing)
       playgetdir(&dir,&firepflag);

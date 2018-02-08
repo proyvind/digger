@@ -197,10 +197,10 @@ void readdirect(int n)
       (olpressed[n] && !l && dynamicdir[n]==DIR_LEFT) ||
       (orpressed[n] && !r && dynamicdir[n]==DIR_RIGHT)) {
     dynamicdir[n]=DIR_NONE;
-    if (u) dynamicdir[n]=staticdir[n]=2;
-    if (d) dynamicdir[n]=staticdir[n]=6;
-    if (l) dynamicdir[n]=staticdir[n]=4;
-    if (r) dynamicdir[n]=staticdir[n]=0;
+    if (u) dynamicdir[n]=staticdir[n]=DIR_UP;
+    if (d) dynamicdir[n]=staticdir[n]=DIR_DOWN;
+    if (l) dynamicdir[n]=staticdir[n]=DIR_LEFT;
+    if (r) dynamicdir[n]=staticdir[n]=DIR_RIGHT;
   }
   oupressed[n]=u;
   odpressed[n]=d;

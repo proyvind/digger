@@ -174,42 +174,42 @@ void readdirect(int n)
   bool u=false,d=false,l=false,r=false;
   uint8_t hat = readjoy(n);
 
-    if ((hat & SDL_HAT_UP) || auppressed[n] || uppressed(n)) { u=true; auppressed[n]=false; }
-    if ((hat & SDL_HAT_DOWN) || adownpressed[n] || downpressed(n)) { d=true; adownpressed[n]=false; }
-    if ((hat & SDL_HAT_LEFT) || aleftpressed[n] || leftpressed(n)) { l=true; aleftpressed[n]=false; }
-    if ((hat & SDL_HAT_RIGHT) || arightpressed[n] || rightpressed(n)) { r=true; arightpressed[n]=false; }
-    if (GetJSButton(n,0) || f1pressed(n) || af1pressed[n]) {
-      firepflag[n]=true;
-      af1pressed[n]=false;
-    }
-    else
-      firepflag[n]=false;
-    if (u && !oupressed[n])
-      staticdir[n]=dynamicdir[n]=DIR_UP;
-    if (d && !odpressed[n])
-      staticdir[n]=dynamicdir[n]=DIR_DOWN;
-    if (l && !olpressed[n])
-      staticdir[n]=dynamicdir[n]=DIR_LEFT;
-    if (r && !orpressed[n])
-      staticdir[n]=dynamicdir[n]=DIR_RIGHT;
-    if ((oupressed[n] && !u && dynamicdir[n]==DIR_UP) ||
-        (odpressed[n] && !d && dynamicdir[n]==DIR_DOWN) ||
-        (olpressed[n] && !l && dynamicdir[n]==DIR_LEFT) ||
-        (orpressed[n] && !r && dynamicdir[n]==DIR_RIGHT)) {
-      dynamicdir[n]=DIR_NONE;
-      if (u) dynamicdir[n]=staticdir[n]=2;
-      if (d) dynamicdir[n]=staticdir[n]=6;
-      if (l) dynamicdir[n]=staticdir[n]=4;
-      if (r) dynamicdir[n]=staticdir[n]=0;
-    }
-    oupressed[n]=u;
-    odpressed[n]=d;
-    olpressed[n]=l;
-    orpressed[n]=r;
-    keydir[n]=staticdir[n];
-    if (dynamicdir[n]!=DIR_NONE)
-      keydir[n]=dynamicdir[n];
-    staticdir[n]=DIR_NONE;
+  if ((hat & SDL_HAT_UP) || auppressed[n] || uppressed(n)) { u=true; auppressed[n]=false; }
+  if ((hat & SDL_HAT_DOWN) || adownpressed[n] || downpressed(n)) { d=true; adownpressed[n]=false; }
+  if ((hat & SDL_HAT_LEFT) || aleftpressed[n] || leftpressed(n)) { l=true; aleftpressed[n]=false; }
+  if ((hat & SDL_HAT_RIGHT) || arightpressed[n] || rightpressed(n)) { r=true; arightpressed[n]=false; }
+  if (GetJSButton(n,0) || f1pressed(n) || af1pressed[n]) {
+    firepflag[n]=true;
+    af1pressed[n]=false;
+  }
+  else
+    firepflag[n]=false;
+  if (u && !oupressed[n])
+    staticdir[n]=dynamicdir[n]=DIR_UP;
+  if (d && !odpressed[n])
+    staticdir[n]=dynamicdir[n]=DIR_DOWN;
+  if (l && !olpressed[n])
+    staticdir[n]=dynamicdir[n]=DIR_LEFT;
+  if (r && !orpressed[n])
+    staticdir[n]=dynamicdir[n]=DIR_RIGHT;
+  if ((oupressed[n] && !u && dynamicdir[n]==DIR_UP) ||
+      (odpressed[n] && !d && dynamicdir[n]==DIR_DOWN) ||
+      (olpressed[n] && !l && dynamicdir[n]==DIR_LEFT) ||
+      (orpressed[n] && !r && dynamicdir[n]==DIR_RIGHT)) {
+    dynamicdir[n]=DIR_NONE;
+    if (u) dynamicdir[n]=staticdir[n]=2;
+    if (d) dynamicdir[n]=staticdir[n]=6;
+    if (l) dynamicdir[n]=staticdir[n]=4;
+    if (r) dynamicdir[n]=staticdir[n]=0;
+  }
+  oupressed[n]=u;
+  odpressed[n]=d;
+  olpressed[n]=l;
+  orpressed[n]=r;
+  keydir[n]=staticdir[n];
+  if (dynamicdir[n]!=DIR_NONE)
+    keydir[n]=dynamicdir[n];
+  staticdir[n]=DIR_NONE;
 }
 
 bool teststart(void)
@@ -232,8 +232,8 @@ bool teststart(void)
 int16_t getdirect(int n)
 {
   int16_t dir=keydir[n];
-    if (playing)
-      playgetdir(&dir,&firepflag[n]);
-    recputdir(dir,firepflag[n]);
+  if (playing)
+    playgetdir(&dir,&firepflag[n]);
+  recputdir(dir,firepflag[n]);
   return dir;
 }

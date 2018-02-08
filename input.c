@@ -50,26 +50,9 @@ void checkkeyb(void)
   bool *aflagp[10]={&arightpressed[0],&auppressed[0],&aleftpressed[0],&adownpressed[0],
                     &af1pressed[0],&arightpressed[1],&auppressed[1],&aleftpressed[1],
                     &adownpressed[1],&af1pressed[1]};
-  if (leftpressed(0))
-    aleftpressed[0]=true;
-  if (rightpressed(0))
-    arightpressed[0]=true;
-  if (uppressed(0))
-    auppressed[0]=true;
-  if (downpressed(0))
-    adownpressed[0]=true;
-  if (f1pressed(0))
-    af1pressed[0]=true;
-  if (leftpressed(1))
-    aleftpressed[1]=true;
-  if (rightpressed(1))
-    arightpressed[1]=true;
-  if (uppressed(1))
-    auppressed[1]=true;
-  if (downpressed(1))
-    adownpressed[1]=true;
-  if (f1pressed(1))
-    af1pressed[1]=true;
+  for (i=0; i < sizeof(aflagp)/sizeof(*aflagp); i++)
+    if (GetAsyncKeyState(keycodes[i][0]))
+      *aflagp[i]=true;
 
   while (kbhit()) {
     akeypressed=getkey(true);

@@ -216,6 +216,8 @@ bool teststart(void)
 {
   bool startf=false;
   if (joyflag) {
+    if (GetJSButton(1,0))
+      mode_change=true;
     if (GetJSButton(0,0))
       startf=true;
   }

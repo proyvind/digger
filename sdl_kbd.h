@@ -34,15 +34,10 @@
 
 bool GetAsyncKeyState(int);
 
-#define rightpressed  (GetAsyncKeyState(keycodes[0][0]))
-#define uppressed     (GetAsyncKeyState(keycodes[1][0]))
-#define leftpressed   (GetAsyncKeyState(keycodes[2][0]))
-#define downpressed   (GetAsyncKeyState(keycodes[3][0]))
-#define f1pressed     (GetAsyncKeyState(keycodes[4][0]))
-#define right2pressed (GetAsyncKeyState(keycodes[5][0]))
-#define up2pressed    (GetAsyncKeyState(keycodes[6][0]))
-#define left2pressed  (GetAsyncKeyState(keycodes[7][0]))
-#define down2pressed  (GetAsyncKeyState(keycodes[8][0]))
-#define f12pressed    (GetAsyncKeyState(keycodes[9][0]))
+#define rightpressed(n)  (GetAsyncKeyState(keycodes[0+(n*5)][0]))
+#define uppressed(n)     (GetAsyncKeyState(keycodes[1+(n*5)][0]))
+#define leftpressed(n)   (GetAsyncKeyState(keycodes[2+(n*5)][0]))
+#define downpressed(n)   (GetAsyncKeyState(keycodes[3+(n*5)][0]))
+#define f1pressed(n)     (GetAsyncKeyState(keycodes[4+(n*5)][0]))
 
 #endif

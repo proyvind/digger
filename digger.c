@@ -42,7 +42,6 @@ static void updatefire(struct digger_draw_api *, int n);
 static void diggerdie(struct digger_draw_api *, int n);
 static void initbonusmode(struct digger_draw_api *);
 static void endbonusmode(struct digger_draw_api *);
-static bool getfirepflag(int n);
 static void drawdig(int n);
 
 void initdigger(void)
@@ -778,12 +777,6 @@ void killemerald(int16_t x,int16_t y)
     emfield[(y+1)*MWIDTH+x]&=~emmask;
     eraseemerald(x*20+12,(y+1)*18+21);
   }
-}
-
-static bool
-getfirepflag(int n)
-{
-  return n==0 ? firepflag : fire2pflag;
 }
 
 int diggerx(int n)

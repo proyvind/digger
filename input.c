@@ -16,22 +16,25 @@
 #endif
 
 /* global variables first */
-bool escape=false,firepflag=false,fire2pflag=false,pausef=false,mode_change=false;
+bool escape=false,pausef=false,mode_change=false;
 bool krdf[NKEYS]={false,false,false,false,false,false,false,false,false,false,
                false,false,false,false,false,false,false,false};
 
-static bool aleftpressed=false,arightpressed=false,
-     auppressed=false,adownpressed=false,start=false,af1pressed=false;
-static bool aleft2pressed=false,aright2pressed=false,
-     aup2pressed=false,adown2pressed=false,af12pressed=false;
-
+static bool aleftpressed[2]={false,false},arightpressed[2]={false,false},
+       auppressed[2]={false,false},adownpressed[2]={false,false},
+       af1pressed[2]={false,false},firepflag[2]={false,false};
+static bool start=false;
 int16_t akeypressed;
 
-static int16_t dynamicdir=-1,dynamicdir2=-1,staticdir=-1,staticdir2=-1;
-
-static int16_t keydir=0,keydir2=0;
+static int16_t dynamicdir[2]={-1,-1},staticdir[2]={-1,-1},
+       keydir[2]={false,false};
 
 static bool joyflag=false;
+
+bool getfirepflag(int n)
+{
+  return firepflag[n];
+}
 
 /* The standard ASCII keyboard is also checked so that very short keypresses
    are not overlooked. The functions kbhit() (returns bool denoting whether or
@@ -44,29 +47,29 @@ static bool joyflag=false;
 void checkkeyb(void)
 {
   int i,j,k=0;
-  bool *aflagp[10]={&arightpressed,&auppressed,&aleftpressed,&adownpressed,
-                    &af1pressed,&aright2pressed,&aup2pressed,&aleft2pressed,
-                    &adown2pressed,&af12pressed};
-  if (leftpressed)
-    aleftpressed=true;
-  if (rightpressed)
-    arightpressed=true;
-  if (uppressed)
-    auppressed=true;
-  if (downpressed)
-    adownpressed=true;
-  if (f1pressed)
-    af1pressed=true;
-  if (left2pressed)
-    aleft2pressed=true;
-  if (right2pressed)
-    aright2pressed=true;
-  if (up2pressed)
-    aup2pressed=true;
-  if (down2pressed)
-    adown2pressed=true;
-  if (f12pressed)
-    af12pressed=true;
+  bool *aflagp[10]={&arightpressed[0],&auppressed[0],&aleftpressed[0],&adownpressed[0],
+                    &af1pressed[0],&arightpressed[1],&auppressed[1],&aleftpressed[1],
+                    &adownpressed[1],&af1pressed[1]};
+  if (leftpressed(0))
+    aleftpressed[0]=true;
+  if (rightpressed(0))
+    arightpressed[0]=true;
+  if (uppressed(0))
+    auppressed[0]=true;
+  if (downpressed(0))
+    adownpressed[0]=true;
+  if (f1pressed(0))
+    af1pressed[0]=true;
+  if (leftpressed(1))
+    aleftpressed[1]=true;
+  if (rightpressed(1))
+    arightpressed[1]=true;
+  if (uppressed(1))
+    auppressed[1]=true;
+  if (downpressed(1))
+    adownpressed[1]=true;
+  if (f1pressed(1))
+    af1pressed[1]=true;
 
   while (kbhit()) {
     akeypressed=getkey(true);
@@ -120,21 +123,23 @@ void checkkeyb(void)
    DOSPC. */
 static uint8_t readjoy(int n)
 {
-  uint8_t hat;
+  uint8_t hat = SDL_HAT_CENTERED;
 
-  if ((hat = GetJSHat(n,0)) == SDL_HAT_CENTERED) {
-    int16_t axisx = GetJSAxis(n,0), axisy = GetJSAxis(n,1);
-    if (axisx || axisy) {
-      const uint16_t threshold = 16384;
+  if (joyflag) {
+    if ((hat = GetJSHat(n,0)) == SDL_HAT_CENTERED) {
+      int16_t axisx = GetJSAxis(n,0), axisy = GetJSAxis(n,1);
+      if (axisx || axisy) {
+	static const uint16_t threshold = 16384;
 
-      if (axisx < 0 && abs(axisx) > threshold) 
-	hat|=SDL_HAT_LEFT;
-      else if (axisx > threshold)
-	hat|=SDL_HAT_RIGHT;
-      if (axisy < 0 && abs(axisy) > threshold)
-	hat|=SDL_HAT_UP;
-      else if (axisy > threshold)
-	hat|=SDL_HAT_DOWN;
+	if (axisx < 0 && abs(axisx) > threshold)
+	  hat|=SDL_HAT_LEFT;
+	else if (axisx > threshold)
+	  hat|=SDL_HAT_RIGHT;
+	if (axisy < 0 && abs(axisy) > threshold)
+	  hat|=SDL_HAT_UP;
+	else if (axisy > threshold)
+	  hat|=SDL_HAT_DOWN;
+      }
     }
   }
 
@@ -144,8 +149,6 @@ static uint8_t readjoy(int n)
 void detectjoy(void)
 {
   joyflag = init_joystick();
-
-  staticdir=dynamicdir=DIR_NONE;
 }
 
 /* Contrary to some beliefs, you don't need a separate OS call to flush the
@@ -154,108 +157,59 @@ void flushkeybuf(void)
 {
   while (kbhit())
     getkey(true);
-  aleftpressed=arightpressed=auppressed=adownpressed=af1pressed=false;
-  aleft2pressed=aright2pressed=aup2pressed=adown2pressed=af12pressed=false;
+  aleftpressed[0]=arightpressed[0]=auppressed[0]=adownpressed[0]=af1pressed[0]=false;
+  aleftpressed[1]=arightpressed[1]=auppressed[1]=adownpressed[1]=af1pressed[1]=false;
 }
 
 void clearfire(int n)
 {
-  if (n==0)
-    af1pressed=false;
-  else
-    af12pressed=false;
+  af1pressed[n]=false;
 }
 
-bool oupressed=false,odpressed=false,olpressed=false,orpressed=false;
-bool ou2pressed=false,od2pressed=false,ol2pressed=false,or2pressed=false;
+bool oupressed[2]={false,false},odpressed[2]={false,false},
+     olpressed[2]={false,false},orpressed[2]={false,false};
 
 void readdirect(int n)
 {
   bool u=false,d=false,l=false,r=false;
-  bool u2=false,d2=false,l2=false,r2=false;
   uint8_t hat = readjoy(n);
 
-  if (n==0) {
-    if ((hat & SDL_HAT_UP) || auppressed || uppressed) { u=true; auppressed=false; }
-    if ((hat & SDL_HAT_DOWN) || adownpressed || downpressed) { d=true; adownpressed=false; }
-    if ((hat & SDL_HAT_LEFT) || aleftpressed || leftpressed) { l=true; aleftpressed=false; }
-    if ((hat & SDL_HAT_RIGHT) || arightpressed || rightpressed) { r=true; arightpressed=false; }
-    if (GetJSButton(0,0) || f1pressed || af1pressed) {
-      firepflag=true;
-      af1pressed=false;
+    if ((hat & SDL_HAT_UP) || auppressed[n] || uppressed(n)) { u=true; auppressed[n]=false; }
+    if ((hat & SDL_HAT_DOWN) || adownpressed[n] || downpressed(n)) { d=true; adownpressed[n]=false; }
+    if ((hat & SDL_HAT_LEFT) || aleftpressed[n] || leftpressed(n)) { l=true; aleftpressed[n]=false; }
+    if ((hat & SDL_HAT_RIGHT) || arightpressed[n] || rightpressed(n)) { r=true; arightpressed[n]=false; }
+    if (GetJSButton(n,0) || f1pressed(n) || af1pressed[n]) {
+      firepflag[n]=true;
+      af1pressed[n]=false;
     }
     else
-      firepflag=false;
-    if (u && !oupressed)
-      staticdir=dynamicdir=DIR_UP;
-    if (d && !odpressed)
-      staticdir=dynamicdir=DIR_DOWN;
-    if (l && !olpressed)
-      staticdir=dynamicdir=DIR_LEFT;
-    if (r && !orpressed)
-      staticdir=dynamicdir=DIR_RIGHT;
-    if ((oupressed && !u && dynamicdir==DIR_UP) ||
-        (odpressed && !d && dynamicdir==DIR_DOWN) ||
-        (olpressed && !l && dynamicdir==DIR_LEFT) ||
-        (orpressed && !r && dynamicdir==DIR_RIGHT)) {
-      dynamicdir=DIR_NONE;
-      if (u) dynamicdir=staticdir=2;
-      if (d) dynamicdir=staticdir=6;
-      if (l) dynamicdir=staticdir=4;
-      if (r) dynamicdir=staticdir=0;
+      firepflag[n]=false;
+    if (u && !oupressed[n])
+      staticdir[n]=dynamicdir[n]=DIR_UP;
+    if (d && !odpressed[n])
+      staticdir[n]=dynamicdir[n]=DIR_DOWN;
+    if (l && !olpressed[n])
+      staticdir[n]=dynamicdir[n]=DIR_LEFT;
+    if (r && !orpressed[n])
+      staticdir[n]=dynamicdir[n]=DIR_RIGHT;
+    if ((oupressed[n] && !u && dynamicdir[n]==DIR_UP) ||
+        (odpressed[n] && !d && dynamicdir[n]==DIR_DOWN) ||
+        (olpressed[n] && !l && dynamicdir[n]==DIR_LEFT) ||
+        (orpressed[n] && !r && dynamicdir[n]==DIR_RIGHT)) {
+      dynamicdir[n]=DIR_NONE;
+      if (u) dynamicdir[n]=staticdir[n]=2;
+      if (d) dynamicdir[n]=staticdir[n]=6;
+      if (l) dynamicdir[n]=staticdir[n]=4;
+      if (r) dynamicdir[n]=staticdir[n]=0;
     }
-    oupressed=u;
-    odpressed=d;
-    olpressed=l;
-    orpressed=r;
-    keydir=staticdir;
-    if (dynamicdir!=DIR_NONE)
-      keydir=dynamicdir;
-    staticdir=DIR_NONE;
-  }
-  else {
-    if (aup2pressed || up2pressed) { u2=true; aup2pressed=false; }
-    if (adown2pressed || down2pressed) { d2=true; adown2pressed=false; }
-    if (aleft2pressed || left2pressed) { l2=true; aleft2pressed=false; }
-    if (aright2pressed || right2pressed) { r2=true; aright2pressed=false; }
-    if (f12pressed || af12pressed) {
-      fire2pflag=true;
-      af12pressed=false;
-    }
-    else
-      fire2pflag=false;
-    if (u2 && !ou2pressed)
-      staticdir2=dynamicdir2=DIR_UP;
-    if (d2 && !od2pressed)
-      staticdir2=dynamicdir2=DIR_DOWN;
-    if (l2 && !ol2pressed)
-      staticdir2=dynamicdir2=DIR_LEFT;
-    if (r2 && !or2pressed)
-      staticdir2=dynamicdir2=DIR_RIGHT;
-    if ((ou2pressed && !u2 && dynamicdir2==DIR_UP) ||
-        (od2pressed && !d2 && dynamicdir2==DIR_DOWN) ||
-        (ol2pressed && !l2 && dynamicdir2==DIR_LEFT) ||
-        (or2pressed && !r2 && dynamicdir2==DIR_RIGHT)) {
-      dynamicdir2=DIR_NONE;
-      if (u2) dynamicdir2=staticdir2=2;
-      if (d2) dynamicdir2=staticdir2=6;
-      if (l2) dynamicdir2=staticdir2=4;
-      if (r2) dynamicdir2=staticdir2=0;
-    }
-    ou2pressed=u2;
-    od2pressed=d2;
-    ol2pressed=l2;
-    or2pressed=r2;
-    keydir2=staticdir2;
-    if (dynamicdir2!=DIR_NONE)
-      keydir2=dynamicdir2;
-    staticdir2=DIR_NONE;
-  }
-
-  if (joyflag) {
-    incpenalty();
-    incpenalty();
-  }
+    oupressed[n]=u;
+    odpressed[n]=d;
+    olpressed[n]=l;
+    orpressed[n]=r;
+    keydir[n]=staticdir[n];
+    if (dynamicdir[n]!=DIR_NONE)
+      keydir[n]=dynamicdir[n];
+    staticdir[n]=DIR_NONE;
 }
 
 bool teststart(void)
@@ -277,16 +231,9 @@ bool teststart(void)
 
 int16_t getdirect(int n)
 {
-  int16_t dir=((n==0) ? keydir : keydir2);
-  if (n==0) {
+  int16_t dir=keydir[n];
     if (playing)
-      playgetdir(&dir,&firepflag);
-    recputdir(dir,firepflag);
-  }
-  else {
-    if (playing)
-      playgetdir(&dir,&fire2pflag);
-    recputdir(dir,fire2pflag);
-  }
+      playgetdir(&dir,&firepflag[n]);
+    recputdir(dir,firepflag[n]);
   return dir;
 }

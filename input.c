@@ -153,7 +153,7 @@ void clearfire(int n)
   af1pressed[n]=false;
 }
 
-bool oupressed[2]={false,false},odpressed[2]={false,false},
+static bool oupressed[2]={false,false},odpressed[2]={false,false},
      olpressed[2]={false,false},orpressed[2]={false,false};
 
 void readdirect(int n)

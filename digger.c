@@ -18,7 +18,6 @@
 #include "scores.h"
 #include "bags.h"
 #include "bullet_obj.h"
-#include "sdl_js.h"
 
 struct digger
 {
@@ -252,7 +251,6 @@ updatefire(struct digger_draw_api *ddap, int n)
           bullet_obj_init(&digdat[n].bob, n - curplayer, digdat[n].dob.dir, fx, fy);
           CALL_METHOD(&digdat[n].bob, put);
           soundfire(n);
-	  HapticRumble(n-curplayer, 1.0, 500);
         }
       }
     }

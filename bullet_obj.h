@@ -43,6 +43,7 @@ struct bullet_obj {
     fmethod_t animate;
     fmethod_t remove;
     fmethod_t explode;
+    int effect_id;
 };
 
 void bullet_obj_init(struct bullet_obj *self, uint16_t f_id, int16_t dir, int16_t x, int16_t y);

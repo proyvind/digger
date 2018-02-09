@@ -29,6 +29,7 @@ static void print_joystick_info(int joy_idx, SDL_Joystick* joy, SDL_GameControll
 
 static SDL_Joystick *joy[2] = {NULL,NULL};
 static SDL_Haptic *haptic[2] = {NULL,NULL};
+static unsigned int supported[2] = {0,0};
 
 bool init_joystick(void) {
   if(SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) < 0)
@@ -57,7 +58,9 @@ bool init_joystick(void) {
 		SDL_HapticRumbleInit(haptic[joy_idx]) !=0) {
 	    SDL_HapticClose(haptic[joy_idx]);
 	    haptic[joy_idx] = NULL;
-	  }
+	    supported[joy_idx] = 0;
+	  } else
+	    supported[joy_idx] = SDL_HapticQuery(haptic[joy_idx]);
 	}
       }
     }
@@ -80,4 +83,52 @@ uint8_t GetJSButton(int joy_idx, int button) {
 void HapticRumble(int joy_idx, float strength, uint32_t length) {
   if (haptic[joy_idx])
     SDL_HapticRumblePlay(haptic[joy_idx], strength, length);
+}
+
+int HapticEffect(int joy_idx, enum hapfx efx, uint32_t length) {
+  int effect_id = -1;
+  unsigned int fx = -1;
+
+  switch(efx) {
+    case HAPTIC_SINE:
+      fx = SDL_HAPTIC_SINE;
+    case HAPTIC_TRIANGLE:
+      fx = SDL_HAPTIC_TRIANGLE;
+    case HAPTIC_LEFTRIGHT:
+      fx = SDL_HAPTIC_LEFTRIGHT;
+  }
+
+  if (haptic[joy_idx]) {
+    if (supported[joy_idx] & fx) {
+      SDL_HapticEffect effect;
+      memset( &effect, 0, sizeof(SDL_HapticEffect) );
+      effect.type = fx;
+      switch (efx) {
+	case HAPTIC_LEFTRIGHT:
+	  effect.leftright.length = length;
+	  effect.leftright.large_magnitude = 0x3000;
+	  effect.leftright.small_magnitude = 0xFFFF;
+	case HAPTIC_SINE:
+	case HAPTIC_TRIANGLE:
+	  effect.periodic.period = 1000;
+	  effect.periodic.magnitude = -0x2000;    /* Negative magnitude and ...                      */
+	  effect.periodic.phase = 18000;          /* ... 180 degrees phase shift => cancel eachother */
+	  effect.periodic.length = length;
+	  effect.periodic.attack_length = 1000;
+	  effect.periodic.fade_length = 1000;
+      }
+      effect_id = SDL_HapticNewEffect(haptic[joy_idx], &effect);
+      if (effect_id  < 0)
+	SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "HAPTIC UPLOADING EFFECT ERROR: %s\n", SDL_GetError());
+      else if (SDL_HapticRunEffect( haptic[joy_idx], effect_id, 1 ) < 0)
+	SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "HAPTIC RUN EFFECT ERROR: %s\n", SDL_GetError());
+    }
+  }
+
+  return effect_id;
+}
+
+void HapticDestroy(int joy_idx, int effect_id) {
+  if (haptic[joy_idx])
+    SDL_HapticDestroyEffect(haptic[joy_idx], effect_id);
 }
